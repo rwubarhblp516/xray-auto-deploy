@@ -107,8 +107,8 @@ generate_config() {
 
     # 生成 X25519 密钥对
     KEYS=$(xray x25519)
-    PRIVATE_KEY=$(echo "$KEYS" | grep "Private key:" | awk '{print $3}')
-    PUBLIC_KEY=$(echo "$KEYS" | grep "Public key:" | awk '{print $3}')
+    PRIVATE_KEY=$(echo "$KEYS" | grep "PrivateKey:" | awk '{print $2}')
+    PUBLIC_KEY=$(echo "$KEYS" | grep "Password:" | awk '{print $2}')
     print_info "生成密钥对"
 
     # 生成 Short ID
