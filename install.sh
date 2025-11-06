@@ -110,15 +110,20 @@ generate_config() {
     PRIVATE_KEY=$(echo "$KEYS" | grep "PrivateKey:" | awk '{print $2}')
     PUBLIC_KEY=$(echo "$KEYS" | grep "Password:" | awk '{print $2}')
     print_info "生成密钥对"
+    print_info "Private Key: ${PRIVATE_KEY:0:20}..."
+    print_info "Public Key: ${PUBLIC_KEY:0:20}..."
 
     # 生成 Short ID
     SHORT_ID=$(openssl rand -hex 8)
     print_info "生成 Short ID: $SHORT_ID"
 
-    # 获取服务器IP
-    SERVER_IP=$(curl -s ifconfig.me)
+    # 获取服务器IP（优先IPv4）
+    SERVER_IP=$(curl -4 -s ifconfig.me 2>/dev/null)
     if [[ -z "$SERVER_IP" ]]; then
-        SERVER_IP=$(curl -s ip.sb)
+        SERVER_IP=$(curl -4 -s ip.sb 2>/dev/null)
+    fi
+    if [[ -z "$SERVER_IP" ]]; then
+        SERVER_IP=$(curl -4 -s icanhazip.com 2>/dev/null)
     fi
     print_info "服务器IP: $SERVER_IP"
 
@@ -235,6 +240,17 @@ generate_config() {
 EOF
 
     print_success "配置文件生成完成"
+
+    # 验证配置文件
+    print_info "验证配置文件..."
+    if xray run -c /usr/local/etc/xray/config.json -test > /dev/null 2>&1; then
+        print_success "配置文件验证通过"
+    else
+        print_error "配置文件验证失败"
+        print_info "运行 xray run -c /usr/local/etc/xray/config.json -test 查看详细错误"
+        xray run -c /usr/local/etc/xray/config.json -test
+        exit 1
+    fi
 }
 
 # 配置防火墙
